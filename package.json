@@ -11,5 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "tslint": "^5.10.0"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.0",
+    "gulp-typescript": "^5.0.0-alpha.1"
   }
 }
