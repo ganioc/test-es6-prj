@@ -62,4 +62,12 @@ var userIf: UserInterface = {
 };
 console.log(userIf);
 
+function add(...num: number[]): number {
+    var result = 0;
+    for (var i = 0; i < num.length; i++) {
+        result += num[i];
+    }
+    return result;
+}
 
+console.log(add(1, 3, 4, 51, 1));

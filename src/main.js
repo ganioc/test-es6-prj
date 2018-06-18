@@ -38,3 +38,11 @@ var userIf = {
     password: '234567'
 };
 console.log(userIf);
+function add(...num) {
+    var result = 0;
+    for (var i = 0; i < num.length; i++) {
+        result += num[i];
+    }
+    return result;
+}
+console.log(add(1, 3, 4, 51, 1));
