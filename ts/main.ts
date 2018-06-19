@@ -1,4 +1,4 @@
-
+import * as path from 'path';
 
 var x: string | string[];
 
@@ -71,3 +71,34 @@ function add(...num: number[]): number {
 }
 
 console.log(add(1, 3, 4, 51, 1));
+
+console.log(path.join('/usr/bin/', 'Block'));
+
+class Item {
+    constructor(i: number) {
+        this.num = i;
+    }
+    num: number;
+}
+
+let item: new () => Item;
+// item = Item;
+// let item2 = new Item(23);
+// console.log(item2.num);
+
+// let item3 = new item();
+// console.log(item3.num);
+
+type TypeX = {
+    name: string
+};
+type TypeY = {
+    age: number
+} & TypeX;
+
+let type: TypeY = {
+    name: "aa",
+    age: 23
+};
+console.log(type);
+

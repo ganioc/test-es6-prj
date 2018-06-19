@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const path = require("path");
 var x;
 x = "First Name";
 console.log(x);
@@ -46,3 +49,15 @@ function add(...num) {
     return result;
 }
 console.log(add(1, 3, 4, 51, 1));
+console.log(path.join('/usr/bin/', 'Block'));
+class Item {
+    constructor(i) {
+        this.num = i;
+    }
+}
+let item;
+let type = {
+    name: "aa",
+    age: 23
+};
+console.log(type);
