@@ -1,14 +1,20 @@
 {
-    "defaultSeverity": "warning",
+    "defaultSeverity": "error",
     "extends": [
-        "tslint:extends"
+        "tslint:recommended"
     ],
     "jsRules": {},
     "rules": {
-        "no-trailing-whitespace": true,
-        "no-console": true,
+        "no-console": false,
+        "object-literal-sort-keys": false,
+        "variable-name": false,
+        "max-line-length": false,
+        "prefer-for-of": false,
+        "ordered-imports": false,
+        "quotemark": false,
+        "max-classes-per-file": false
     },
     "rulesDirectory": [
-        "./ts"
+        "ts/"
     ]
 }

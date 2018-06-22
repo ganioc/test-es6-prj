@@ -1,8 +1,8 @@
 
 console.log('start');
 
-const CANVAS_ID = "mycanvas"
-const canvas = <HTMLCanvasElement>document.getElementById(CANVAS_ID);
+const CANVAS_ID = 'mycanvas';
+const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement;
 const WIDTH = document.getElementById(CANVAS_ID).getAttribute('width');
 const HEIGHT = document.getElementById(CANVAS_ID).getAttribute('height');
 const context = canvas.getContext('2d');
@@ -10,51 +10,78 @@ const context = canvas.getContext('2d');
 console.log('WIDTH:', WIDTH);
 console.log('HEIGHT:', HEIGHT);
 
-//let startTime = Date.now();
-//let tmpSpeed: number = 0;
-class Chair {
+interface IfBasicInfo {
   x: number;
   y: number;
   width: number;
   height: number;
   color: string;
-  color2: string;
-
-  constructor() {
-
-  }
-
-  draw(context: CanvasRenderingContext2D) {
-
-  }
-}
-class Player {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-
-
-  constructor() {
-
-  }
-  draw(context: CanvasRenderingContext2D) {
-
-  }
+  name: string;
 }
 enum STATE {
-  BUSY = 0,
+  PREP = 0,
   OPERATION,
   RUNNING,
-  
+  SWITCH_SCENE,
 }
+class Character {
+  protected x: number;
+  protected y: number;
+  protected width: number;
+  protected height: number;
+  protected color: string;
+  protected name: string;
+
+  constructor(option: IfBasicInfo) {
+    this.x = option.x;
+    this.y = option.y;
+    this.width = option.width;
+    this.height = option.height;
+    this.name = option.name;
+  }
+  public run(ctx: CanvasRenderingContext2D) {
+
+  }
+  get x_p() {
+    return this.x;
+  }
+  set x_p(yIn: number) {
+    this.y = yIn;
+  }
+}
+// let startTime = Date.now();
+// let tmpSpeed: number = 0;
+
+class Table extends Character {
+  private color2: string;
+
+  constructor(option: IfBasicInfo) {
+    super(option);
+  }
+
+  public draw(context: CanvasRenderingContext2D) {
+
+  }
+}
+class Player extends Character {
+
+  constructor(option: IfBasicInfo) {
+    super(option);
+  }
+  public draw(context: CanvasRenderingContext2D) {
+
+  }
+}
+
+
+
 class Playground {
   private timeNow: number;
   private color: number;
-  player: Player;
-  chairPlayer: Chair;
-  state: number;
+  private player: Player;
+  private playerTable: Table;
+  private table: Table;
+  private state: number;
 
   constructor(
     public width: number,
@@ -87,7 +114,7 @@ class Playground {
   }
 }
 
-let playground = new Playground(parseInt(WIDTH), parseInt(HEIGHT), context);
+let playground = new Playground(parseInt(WIDTH, 10), parseInt(HEIGHT, 10), context);
 playground.run(Date.now());
 
 
