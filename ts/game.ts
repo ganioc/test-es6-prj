@@ -18,6 +18,9 @@ interface IfBasicInfo {
   color: string;
   name: string;
 }
+interface IfBehavior {
+  run(ctx: CanvasRenderingContext2D): void;
+}
 enum STATE {
   PREP = 0,
   OPERATION,
@@ -37,47 +40,49 @@ class Character {
     this.y = option.y;
     this.width = option.width;
     this.height = option.height;
+    this.color = option.color;
     this.name = option.name;
   }
-  public run(ctx: CanvasRenderingContext2D) {
 
-  }
-  get x_p() {
+  get x_position() {
     return this.x;
   }
-  set x_p(yIn: number) {
+  set x_position(yIn: number) {
     this.y = yIn;
   }
 }
 // let startTime = Date.now();
 // let tmpSpeed: number = 0;
 
-class Table extends Character {
+class Table extends Character implements IfBehavior {
   private color2: string;
 
   constructor(option: IfBasicInfo) {
     super(option);
   }
-
-  public draw(context: CanvasRenderingContext2D) {
-
+  public run(ctx: CanvasRenderingContext2D) {
+    console.log('Table run()');
+  }
+  public draw(ctx: CanvasRenderingContext2D) {
+    console.log('Table draw');
   }
 }
-class Player extends Character {
+class Player extends Character implements IfBehavior {
 
   constructor(option: IfBasicInfo) {
     super(option);
   }
-  public draw(context: CanvasRenderingContext2D) {
-
+  public run(ctx: CanvasRenderingContext2D) {
+    console.log('Player run');
+  }
+  public draw(ctx: CanvasRenderingContext2D) {
+    console.log('Player draw()');
   }
 }
 
-
-
 class Playground {
   private timeNow: number;
-  private color: number;
+  private color: string;
   private player: Player;
   private playerTable: Table;
   private table: Table;
@@ -86,10 +91,24 @@ class Playground {
   constructor(
     public width: number,
     public height: number,
-    public context: CanvasRenderingContext2D) {
-    this.color = 0;
+    public ctx: CanvasRenderingContext2D) {
+    this.color = '#000000';
     this.run(Date.now());
 
+  }
+  public run(time: number) {
+    const timeDelta = Date.now() - time;
+
+    this.color = this.getColor(this.color, timeDelta);
+
+    this.ctx.clearRect(0, 0, this.width, this.height);
+
+    this.ctx.fillStyle = "#" + this.color;
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    window.requestAnimationFrame(() => {
+      this.run(Date.now() - time);
+    });
   }
   private getColor(color: number, time: number): number {
     let tmp = color + (time / 10);
@@ -98,23 +117,7 @@ class Playground {
     }
     return tmp;
   }
-  public run(time: number) {
-    let timeDelta = Date.now() - time;
-
-    this.color = this.getColor(this.color, timeDelta);
-
-    this.context.clearRect(0, 0, this.width, this.height);
-
-    this.context.fillStyle = "#" + this.color;
-    this.context.fillRect(0, 0, this.width, this.height);
-
-    window.requestAnimationFrame(() => {
-      this.run(Date.now() - time);
-    });
-  }
 }
 
 let playground = new Playground(parseInt(WIDTH, 10), parseInt(HEIGHT, 10), context);
 playground.run(Date.now());
-
-
