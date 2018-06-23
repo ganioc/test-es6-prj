@@ -157,6 +157,10 @@ class Table extends Character implements IfBehavior {
 class Player extends Character implements IfBehavior {
   public angle: number;
   public speed: number;
+  public speedX: number;
+  public speedY: number;
+  public heightJump: number;
+  public gravityY: number;
 
   constructor(option: IfBasicInfo) {
     super(option);
@@ -179,7 +183,9 @@ class Player extends Character implements IfBehavior {
     this.x = table.x;
     this.y = table.y - table.height / 2 - this.height / 2;
   }
-
+  public drop() {
+    console.log(this.name, ' drop');
+  }
 }
 
 class Playground {
@@ -285,6 +291,11 @@ class Playground {
       console.log('keyup');
       // console.log(event);
       console.log(event.code, event.type);
+
+      if (this.state !== STATE.METERING) {
+        console.log('Can not respond to keydown event');
+        return;
+      }
       // console.log();
       this.meter.stop(() => {
         this.state = STATE.RUNNING;
@@ -353,23 +364,76 @@ class Playground {
     run();
 
   }
-  public launchPlayer() {
+  public launchPlayer(callback: (result: boolean) => void) {
     console.log('launchPlayer()');
-    this.timeNow = Date.now();
-    const aimX = this.tableLeftX + this.tableWidthX * this.meter.speed / 10;
-    const aimY = this.table.y - this.table.height / 2;
+    const DUR = 2; // seconds
+    const aimX = this.tableLeftX + this.tableWidthX * (1 - this.meter.speed / 10);
+    const aimY = this.table.y - this.table.height / 2 - this.player.height / 2;
     // this.meter.speed, 0~10,
     const targetMinX = this.table.x - this.table.width / 2 + this.atomX / 2;
     const targetMaxX = this.table.x + this.table.width / 2 - this.atomX / 2;
+    let result: boolean;
+    // a = h/t^2
+    // v = a * t;
+    this.player.heightJump = this.atomX * 5 * (1 + Math.random());
+    this.player.gravityY = 2 * (this.player.y - this.player.heightJump) / (Math.pow(DUR / 2, 2));
+    this.player.speedX = (this.player.x - aimX) / DUR;
+    this.player.speedY = this.player.gravityY * DUR / 2;
+
+    console.log('gravityY:', this.player.gravityY);
+    console.log('speedX', this.player.speedX);
+    console.log('speedY:', this.player.speedY);
 
     if (aimX >= targetMinX && aimX <= targetMaxX) {
       console.log('right at place');
+      result = true;
     } else {
       console.log('out of place');
+      result = false;
     }
 
+    this.timeNow = Date.now();
     const runIt = () => {
-      console.log('runIt()');
+      console.log('launch ->runIt()');
+
+      let timeDelta = (Date.now() - this.timeNow);
+
+      if (timeDelta < 20) {
+        window.requestAnimationFrame(() => {
+          runIt();
+        });
+        return;
+      }
+      const displacement = this.player.x - aimX;
+      console.log('displacement:', displacement);
+      console.log('timeDelta:', timeDelta);
+      timeDelta = timeDelta / 1000;
+      console.log('timeDelta:', timeDelta);
+      if (displacement < 0.1) {
+        callback(result);
+        return;
+      }
+      // change player position
+      if (displacement > this.atomX / 4) {
+        this.player.x -= this.player.speedX * timeDelta;
+        // this.player.x -= 5;
+        // this.player.y -= (this.player.speedY * timeDelta - this.player.gravityY * Math.pow(timeDelta, 2) / 2);
+        this.player.y -= (this.player.speedY * timeDelta);
+        this.player.speedY -= (this.player.gravityY * timeDelta);
+      } else if (displacement > 0 && displacement <= this.atomX / 4) {
+        this.player.x = aimX;
+        this.player.y = aimY;
+      }
+
+      this.clearRect();
+      this.playerTable.draw(this.ctx);
+      this.table.draw(this.ctx);
+      this.player.draw(this.ctx);
+
+      this.timeNow = Date.now();
+      window.requestAnimationFrame(() => {
+        runIt();
+      });
     };
     runIt();
   }
@@ -379,7 +443,25 @@ class Playground {
   // }
   public runRunning() {
     console.log('Run Running');
-    // this.launchPlayer();
+    setTimeout(() => {
+      this.launchPlayer((result: boolean) => {
+        console.log('finished launchPlayer()', result);
+        if (result === true) {
+          // player to default position
+
+          // table be playerTable
+
+          // create new table
+
+          // run Switch Scene
+
+        } else {
+          // false
+          this.player.drop();
+        }
+      });
+    }, 1000);
+
   }
   public runSwitchScene() {
     console.log('Switch scene');
