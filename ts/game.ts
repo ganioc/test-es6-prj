@@ -95,6 +95,13 @@ class Meter extends Character implements IfBehavior {
 
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x - this.width / 2, this.y - this.speed * this.atomX, this.width, this.speed * this.atomX);
+
+    ctx.strokeStyle = this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.x - this.width / 2, this.y - this.height);
+    ctx.lineTo(this.x + this.width / 2, this.y - this.height);
+    ctx.closePath();
+    ctx.stroke();
   }
 
   public run(ctx: CanvasRenderingContext2D) {
@@ -205,6 +212,16 @@ class Player extends Character implements IfBehavior {
       this.height,
     );
   }
+  public drawRelative(ctx: CanvasRenderingContext2D) {
+    console.log(this.name, '-> Player draw()');
+    ctx.fillStyle = this.color;
+    ctx.fillRect(
+      - this.width / 2,
+      - this.height / 2,
+      this.width,
+      this.height,
+    );
+  }
   public approachTable(table: Table) {
     this.x = table.x;
     this.y = table.y - table.height / 2 - this.height / 2;
@@ -212,9 +229,7 @@ class Player extends Character implements IfBehavior {
   public resetState(inX: number, inY: number) {
     this.x = inX;
     this.y = inY;
-  }
-  public drop() {
-    console.log(this.name, ' drop');
+    this.color = '#0000ff'; // blue
   }
 }
 
@@ -226,6 +241,8 @@ class Playground {
   private playerTable: Table;
   private table: Table;
   private meter: Meter;
+  private score: number;
+  private historyScore: number;
 
   // ground level
   private atomX: number;
@@ -300,6 +317,9 @@ class Playground {
       color: '#ffffff',
       name: 'meter',
     }, this.atomX);
+
+    this.score = 0;
+    this.historyScore = 0;
     // const mycanvas = document.getElementById(CANVAS_ID);
     document.addEventListener('keydown', (event) => {
       console.log('keydown');
@@ -338,11 +358,21 @@ class Playground {
 
     this.ctx.fillRect(0, 0, this.width, this.height);
   }
+  public drawLogo() {
+    this.ctx.font = '22px Georgia';
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillText('Score: ' + this.score, 10, 50);
+    this.ctx.fillText('History: ' + this.historyScore, 10, 80);
+
+    this.ctx.font = '32px Georgia';
+    this.ctx.fillText('Jump', 260, 50);
+  }
   public reDraw() {
     this.clearRect();
     this.playerTable.draw(this.ctx);
     this.player.draw(this.ctx);
     this.table.draw(this.ctx);
+    this.drawLogo();
   }
   public getTableWidth(): number {
     return (1 + Math.floor(3 * Math.random())) * this.atomX;
@@ -360,6 +390,63 @@ class Playground {
       this.playerDefaultX,
       this.tableDefaultCenterX);
 
+  }
+  public explodePlayer(callback) {
+    // this.player.color = '#000000';
+    const DUR = 2;
+    const aimX = Math.floor(this.tableRangeX * Math.random());
+    const aimY = -200;
+
+    this.player.gravityY = 1000;
+    this.player.speedX = (this.player.x - aimX) / DUR;
+    this.player.speedY = this.player.gravityY;
+
+    this.timeNow = Date.now();
+
+    const radiSpeed = 25;
+    let angle = 0;
+
+    const runIt = () => {
+      let timeDelta = Date.now() - this.timeNow;
+
+      if (timeDelta < 10) {
+        window.requestAnimationFrame(() => {
+          runIt();
+        });
+        return;
+      }
+      const displacement = this.player.y - aimY;
+
+      timeDelta = timeDelta / 1000;
+
+      if (displacement < 0.1) {
+        callback();
+        return;
+      }
+
+      this.player.x -= this.player.speedX * timeDelta;
+      this.player.y -= this.player.speedY * timeDelta;
+      this.player.speedY += this.player.gravityY * timeDelta;
+
+      this.clearRect();
+      this.playerTable.draw(this.ctx);
+      this.table.draw(this.ctx);
+      this.drawLogo();
+
+      this.ctx.save();
+      this.ctx.translate(this.player.x, this.player.y);
+      angle += radiSpeed * timeDelta;
+      this.ctx.rotate(angle);
+      this.player.drawRelative(this.ctx);
+      this.ctx.restore();
+
+      this.timeNow = Date.now();
+      window.requestAnimationFrame(() => {
+        runIt();
+      });
+
+    };
+    runIt();
   }
   public moveToDefault(playerX: number, playerTableX: number, tableX: number, dur: number, callback) {
 
@@ -399,10 +486,7 @@ class Playground {
       }
       // this.player.approachTable(this.playerTable);
 
-      this.clearRect();
-      this.playerTable.draw(this.ctx);
-      this.player.draw(this.ctx);
-      this.table.draw(this.ctx);
+      this.reDraw();
 
       this.timeNow = Date.now();
 
@@ -420,8 +504,8 @@ class Playground {
     const aimX = this.tableLeftX + this.tableWidthX * (1 - this.meter.speed / 10);
     const aimY = this.table.y - this.table.height / 2 - this.player.height / 2;
     // this.meter.speed, 0~10,
-    const targetMinX = this.table.x - this.table.width / 2 + this.atomX / 4;
-    const targetMaxX = this.table.x + this.table.width / 2 - this.atomX / 4;
+    const targetMinX = this.table.x - this.table.width / 2;
+    const targetMaxX = this.table.x + this.table.width / 2;
     let result: boolean;
     // a = h/t^2
     // v = a * t;
@@ -475,10 +559,7 @@ class Playground {
         this.player.y = aimY;
       }
 
-      this.clearRect();
-      this.playerTable.draw(this.ctx);
-      this.table.draw(this.ctx);
-      this.player.draw(this.ctx);
+      this.reDraw();
 
       this.timeNow = Date.now();
       window.requestAnimationFrame(() => {
@@ -488,9 +569,6 @@ class Playground {
     runIt();
   }
 
-  // public runOperating() {
-  //   console.log('Run Operating');
-  // }
   public runRunning() {
     console.log('Run Running');
     setTimeout(() => {
@@ -505,6 +583,11 @@ class Playground {
           this.table.resetState(-100, this.getTableWidth());
           // create new table
           // run Switch Scene
+          this.score++;
+          console.log('score:', this.score);
+          if (this.score > this.historyScore) {
+            this.historyScore = this.score;
+          }
           this.reDraw();
           this.runSwitchScene(
             deltaX + this.playerDefaultX,
@@ -516,15 +599,18 @@ class Playground {
           );
         } else {
           // false
-          this.player.drop();
-          this.resetState();
-          setTimeout(() => {
-            this.reDraw();
-            this.runSwitchScene(
-              this.playerDefaultX,
-              this.playerDefaultX,
-              this.tableDefaultCenterX);
-          }, 500);
+          this.explodePlayer(() => {
+            this.score = 0;
+            this.resetState();
+            setTimeout(() => {
+              this.reDraw();
+              this.runSwitchScene(
+                this.playerDefaultX,
+                this.playerDefaultX,
+                this.tableDefaultCenterX);
+            }, 500);
+          });
+
         }
       });
     }, 500);
@@ -550,4 +636,3 @@ class Playground {
 let playground = new Playground(parseInt(WIDTH, 10), parseInt(HEIGHT, 10), context);
 
 playground.start();
-
