@@ -44,11 +44,26 @@ class Character {
     this.name = option.name;
   }
 
-  get x_position() {
-    return this.x;
-  }
-  set x_position(yIn: number) {
-    this.y = yIn;
+  // get x_position() {
+  //   return this.x;
+  // }
+  // set x_position(yIn: number) {
+  //   this.y = yIn;
+  // }
+  public getColor(): string {
+    const lstColor: string[] = [
+      'ee0000',
+      'ff0ff0',
+      '606060',
+      '00ff00',
+      'ff002f',
+      'ffff00',
+      '00ffff',
+      'ff00ff',
+      '00bfff',
+      '64fe2e',
+    ];
+    return lstColor[Math.floor(lstColor.length * Math.random())];
   }
 }
 
@@ -153,6 +168,17 @@ class Table extends Character implements IfBehavior {
       this.height,
     );
   }
+  public resetState(inX: number, inWidth: number) {
+    this.x = inX;
+    this.width = inWidth;
+    this.color = '#' + this.getColor();
+  }
+  public copy(table: Table) {
+    this.x = table.x;
+    this.y = table.y;
+    this.width = table.width;
+    this.color = table.color;
+  }
 }
 class Player extends Character implements IfBehavior {
   public angle: number;
@@ -182,6 +208,10 @@ class Player extends Character implements IfBehavior {
   public approachTable(table: Table) {
     this.x = table.x;
     this.y = table.y - table.height / 2 - this.height / 2;
+  }
+  public resetState(inX: number, inY: number) {
+    this.x = inX;
+    this.y = inY;
   }
   public drop() {
     console.log(this.name, ' drop');
@@ -256,7 +286,7 @@ class Playground {
     this.table = new Table({
       x: -100,
       y: (this.groundLevelY - this.atomX / 2),
-      width: this.atomX * 2,
+      width: this.atomX * 4,
       height: this.atomX,
       color: '#ff0000',
       name: 'table',
@@ -267,7 +297,7 @@ class Playground {
       y: this.atomX * 11,
       width: this.atomX,
       height: this.atomX * 10,
-      color: '#ff00ff',
+      color: '#ffffff',
       name: 'meter',
     }, this.atomX);
     // const mycanvas = document.getElementById(CANVAS_ID);
@@ -284,8 +314,6 @@ class Playground {
       } else {
         console.log('can not run meter again');
       }
-
-      // this.meter.draw(this.ctx);
     });
     document.addEventListener('keyup', (event) => {
       console.log('keyup');
@@ -302,11 +330,7 @@ class Playground {
         console.log('Switch to running state');
         this.runRunning();
       });
-      // this.meter.clearRect(this.ctx);
     });
-    // document.addEventListener('keypress', (event) => {
-    //   console.log('keypress');
-    // });
   }
   public clearRect() {
     this.ctx.fillStyle = this.colorBackground;
@@ -314,10 +338,34 @@ class Playground {
 
     this.ctx.fillRect(0, 0, this.width, this.height);
   }
-  public moveToDefault(playerX: number, tableX: number, dur: number, callback) {
+  public reDraw() {
+    this.clearRect();
+    this.playerTable.draw(this.ctx);
+    this.player.draw(this.ctx);
+    this.table.draw(this.ctx);
+  }
+  public getTableWidth(): number {
+    return (1 + Math.floor(3 * Math.random())) * this.atomX;
+  }
+  public resetState() {
+    // put it to default state
+    this.table.resetState(-100, this.getTableWidth());
+    this.playerTable.resetState(this.tableDefaultCenterX, this.atomX * 2);
+    this.player.resetState(this.tableDefaultCenterX,
+      this.groundLevelY - this.playerTable.height - this.player.height / 2);
+  }
+  public start() {
+    this.runSwitchScene(
+      this.playerDefaultX,
+      this.playerDefaultX,
+      this.tableDefaultCenterX);
 
-    this.playerTable.speed = (playerX - this.playerTable.x) / (1000 * dur);
+  }
+  public moveToDefault(playerX: number, playerTableX: number, tableX: number, dur: number, callback) {
+
+    this.playerTable.speed = (playerTableX - this.playerTable.x) / (1000 * dur);
     this.table.speed = (tableX - this.table.x) / (1000 * dur);
+    this.player.speedX = this.playerTable.speed;
     console.log('SPEED is:', this.playerTable.speed);
 
     this.timeNow = Date.now();
@@ -334,7 +382,7 @@ class Playground {
 
       // timeDelta >= 50
       // move it
-      const displacement = playerX - this.playerTable.x;
+      const displacement = playerTableX - this.playerTable.x;
       if (displacement < 0.1) {
         callback();
         return;
@@ -343,11 +391,13 @@ class Playground {
       if (displacement > this.playerTable.speed) {
         this.playerTable.x += this.playerTable.speed * timeDelta;
         this.table.x += this.table.speed * timeDelta;
+        this.player.x += this.player.speedX * timeDelta;
       } else if (displacement > 0 && displacement <= this.playerTable.speed) {
-        this.playerTable.x = playerX;
+        this.playerTable.x = playerTableX;
         this.table.x = tableX;
+        this.player.x = playerX;
       }
-      this.player.approachTable(this.playerTable);
+      // this.player.approachTable(this.playerTable);
 
       this.clearRect();
       this.playerTable.draw(this.ctx);
@@ -370,8 +420,8 @@ class Playground {
     const aimX = this.tableLeftX + this.tableWidthX * (1 - this.meter.speed / 10);
     const aimY = this.table.y - this.table.height / 2 - this.player.height / 2;
     // this.meter.speed, 0~10,
-    const targetMinX = this.table.x - this.table.width / 2 + this.atomX / 2;
-    const targetMaxX = this.table.x + this.table.width / 2 - this.atomX / 2;
+    const targetMinX = this.table.x - this.table.width / 2 + this.atomX / 4;
+    const targetMaxX = this.table.x + this.table.width / 2 - this.atomX / 4;
     let result: boolean;
     // a = h/t^2
     // v = a * t;
@@ -446,28 +496,48 @@ class Playground {
     setTimeout(() => {
       this.launchPlayer((result: boolean) => {
         console.log('finished launchPlayer()', result);
+
         if (result === true) {
-          // player to default position
-
+          const deltaX = this.player.x - this.playerTable.x;
           // table be playerTable
-
+          this.playerTable.copy(this.table);
+          // player to default position
+          this.table.resetState(-100, this.getTableWidth());
           // create new table
-
           // run Switch Scene
-
+          this.reDraw();
+          this.runSwitchScene(
+            deltaX + this.playerDefaultX,
+            this.playerDefaultX,
+            (this.tableLeftX
+              + this.table.width / 2
+              + (this.tableWidthX - this.table.width)
+              * Math.random()),
+          );
         } else {
           // false
           this.player.drop();
+          this.resetState();
+          setTimeout(() => {
+            this.reDraw();
+            this.runSwitchScene(
+              this.playerDefaultX,
+              this.playerDefaultX,
+              this.tableDefaultCenterX);
+          }, 500);
         }
       });
-    }, 1000);
+    }, 500);
 
   }
-  public runSwitchScene() {
+  public runSwitchScene(playerX: number, playerTableX: number, tableX: number) {
     console.log('Switch scene');
+    this.state = STATE.SWITCH_SCENE;
+
     this.moveToDefault(
-      this.playerDefaultX,
-      this.tableDefaultCenterX,
+      playerX,
+      playerTableX,
+      tableX,
       1.0,
       () => {
         this.state = STATE.METERING;
@@ -475,47 +545,9 @@ class Playground {
       },
     );
   }
-  // public run() {
-  //   switch (this.state) {
-  //     case STATE.OPERATING:
-  //       this.runOperating();
-  //       break;
-  //     case STATE.RUNNING:
-  //       this.runRunning();
-  //       break;
-  //     case STATE.SWITCH_SCENE:
-  //       this.runSwitchScene();
-  //       break;
-  //     default:
-  //       throw new Error('Unrecognized state:' + this.state);
-  //       break;
-  //   }
 }
-// public run(time: number) {
-//   const timeDelta = Date.now() - time;
-
-//   this.color = this.getColor(this.color, timeDelta);
-
-//   this.ctx.clearRect(0, 0, this.width, this.height);
-
-//   this.ctx.fillStyle = "#" + this.color;
-//   this.ctx.fillRect(0, 0, this.width, this.height);
-
-//   window.requestAnimationFrame(() => {
-//     this.run(Date.now() - time);
-//   });
-// }
-// private getColor(color: number, time: number): number {
-//   let tmp = color + (time / 10);
-//   if (tmp > 0xffffff) {
-//     return 0;
-//   }
-//   return tmp;
-// }
-// }
 
 let playground = new Playground(parseInt(WIDTH, 10), parseInt(HEIGHT, 10), context);
 
-playground.runSwitchScene();
+playground.start();
 
-// playground.
