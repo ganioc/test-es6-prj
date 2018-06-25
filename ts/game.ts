@@ -450,48 +450,6 @@ class Playground {
         this.ctx.restore();
       },
     );
-
-    // const runIt = () => {
-    //   let timeDelta = Date.now() - this.timeNow;
-
-    //   if (timeDelta < 10) {
-    //     window.requestAnimationFrame(() => {
-    //       runIt();
-    //     });
-    //     return;
-    //   }
-    //   const displacement = this.player.y - aimY;
-
-    //   timeDelta = timeDelta / 1000;
-
-    //   if (displacement < 0.1) {
-    //     callback();
-    //     return;
-    //   }
-
-    //   this.player.x -= this.player.speedX * timeDelta;
-    //   this.player.y -= this.player.speedY * timeDelta;
-    //   this.player.speedY += this.player.gravityY * timeDelta;
-
-    //   this.clearRect();
-    //   this.playerTable.draw(this.ctx);
-    //   this.table.draw(this.ctx);
-    //   this.drawLogo();
-
-    //   this.ctx.save();
-    //   this.ctx.translate(this.player.x, this.player.y);
-    //   angle += radiSpeed * timeDelta;
-    //   this.ctx.rotate(angle);
-    //   this.player.drawRelative(this.ctx);
-    //   this.ctx.restore();
-
-    //   this.timeNow = Date.now();
-    //   window.requestAnimationFrame(() => {
-    //     runIt();
-    //   });
-
-    // };
-    // runIt();
   }
   public moveToDefault(playerX: number, playerTableX: number, tableX: number, dur: number, callback) {
 
@@ -500,48 +458,32 @@ class Playground {
     this.player.speedX = this.playerTable.speed;
     console.log('SPEED is:', this.playerTable.speed);
 
-    this.timeNow = Date.now();
+    // this.timeNow = Date.now();
+    Env.run(
+      (timeDelta) => {
+        const displacement = playerTableX - this.playerTable.x;
+        if (displacement < 0.1) {
+          callback();
+          return false;
+        } else {
+          return true;
+        }
+      },
+      (timeDelta) => {
+        const displacement = playerTableX - this.playerTable.x;
+        if (displacement > this.playerTable.speed) {
+          this.playerTable.x += this.playerTable.speed * timeDelta;
+          this.table.x += this.table.speed * timeDelta;
+          this.player.x += this.player.speedX * timeDelta;
+        } else if (displacement > 0 && displacement <= this.playerTable.speed) {
+          this.playerTable.x = playerTableX;
+          this.table.x = tableX;
+          this.player.x = playerX;
+        }
 
-    const run = () => {
-      const timeDelta = Date.now() - this.timeNow;
-
-      if (timeDelta < 20) {
-        window.requestAnimationFrame(() => {
-          run();
-        });
-        return;
-      }
-
-      // timeDelta >= 50
-      // move it
-      const displacement = playerTableX - this.playerTable.x;
-      if (displacement < 0.1) {
-        callback();
-        return;
-      }
-
-      if (displacement > this.playerTable.speed) {
-        this.playerTable.x += this.playerTable.speed * timeDelta;
-        this.table.x += this.table.speed * timeDelta;
-        this.player.x += this.player.speedX * timeDelta;
-      } else if (displacement > 0 && displacement <= this.playerTable.speed) {
-        this.playerTable.x = playerTableX;
-        this.table.x = tableX;
-        this.player.x = playerX;
-      }
-      // this.player.approachTable(this.playerTable);
-
-      this.reDraw();
-
-      this.timeNow = Date.now();
-
-      window.requestAnimationFrame(() => {
-        run();
-      });
-    };
-
-    run();
-
+        this.reDraw();
+      },
+    );
   }
   public launchPlayer(callback: (result: boolean) => void) {
     console.log('launchPlayer()');
