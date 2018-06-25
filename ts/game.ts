@@ -8,21 +8,33 @@ const context = canvas.getContext('2d');
 console.log('WIDTH:', WIDTH);
 console.log('HEIGHT:', HEIGHT);
 
-function Erun(callbackRun: (number) => boolean) {
-  let timeDelta: number;
+function Erun(callbackCheck: (number) => boolean, callbackRun: (number) => void) {
+  let timeDelta: number = 123;
   let timeNow = Date.now();
+
+  // const feedback = callbackRun(timeDelta);
+  // console.log("Erun -> ", feedback);
 
   const runIt = () => {
     timeDelta = Date.now() - timeNow;
-    if (timeDelta < 20) {
-      rerunIt();
-    }
-    const status: boolean = callbackRun(timeDelta);
 
+    const status: boolean = callbackCheck(timeDelta);
+    console.log('status:', status);
     if (status === false) {
       return;
     }
+
+    if (timeDelta < 20) {
+      rerunIt();
+      // window.requestAnimationFrame(() => {
+      //   runIt();
+      // });
+      return;
+    }
+    callbackRun(timeDelta);
+
     timeNow = Date.now();
+
     rerunIt();
   };
   const rerunIt = () => {
@@ -119,83 +131,76 @@ class Meter extends Character implements IfBehavior {
     ctx.fillStyle = this.color2;
     ctx.fillRect(this.x - this.width / 2, this.y - 10 * this.atomX, this.width, (10 - this.speed) * this.atomX);
   }
-  public workFunc(ctx: CanvasRenderingContext2D) {
-    return function (timeDelta) {
-      if (this.bOccupied === false) {
-        this.clearRect(ctx);
-        console.log("quit meter state");
-        console.log('speed is:', this.speed);
-        return false;
-      }
-      this.speed += (this.VELOCITY * timeDelta);
-      if (this.speed > this.speedMax) {
-        this.speed = this.speedMax;
-        this.VELOCITY = (-this.VELOCITY);
-        console.log('over: velocity ->', this.VELOCITY);
-      } else if (this.speed < 0) {
-        this.speed = 0;
-        this.VELOCITY = (-this.VELOCITY);
-        console.log('under: velocity ->', this.VELOCITY);
-      }
-      this.draw(ctx);
-      return true;
-    };
-  }
-  public run1(ctx: CanvasRenderingContext2D) {
+
+  public run(ctx: CanvasRenderingContext2D) {
     this.speed = 0;
     this.VELOCITY = 10 / 1000;
 
     if (this.bOccupied === false) {
       this.bOccupied = true;
 
-      Erun(this.workFunc(ctx));
+      console.log("meter run() only once");
+
+      Erun(
+        (timeDelta) => {
+          console.log('callbackCheck: ', timeDelta);
+          if (this.bOccupied === false) {
+            return false;
+          } else {
+            return true;
+          }
+        },
+        (timeDelta) => {
+          console.log('callbackrun: ', timeDelta);
+        },
+      );
     }
   }
-  public run(ctx: CanvasRenderingContext2D) {
-    console.log(this.name, '-> run()');
-    this.timeNow = Date.now();
-    this.speed = 0;
-    let VELOCITY = 10 / 1000;
+  // public run1(ctx: CanvasRenderingContext2D) {
+  //   console.log(this.name, '-> run()');
+  //   this.timeNow = Date.now();
+  //   this.speed = 0;
+  //   let VELOCITY = 10 / 1000;
 
-    const runIt = () => {
-      if (this.bOccupied === false) {
-        this.clearRect(ctx);
-        console.log("quit meter state");
-        console.log('speed is:', this.speed);
-        return;
-      }
-      const timeDelta = Date.now() - this.timeNow;
-      if (timeDelta < 20) {
-        window.requestAnimationFrame(() => {
-          runIt();
-        });
-        return;
-      }
-      this.speed += (VELOCITY * timeDelta);
-      console.log('this.speed:', this.speed);
+  //   const runIt = () => {
+  //     if (this.bOccupied === false) {
+  //       this.clearRect(ctx);
+  //       console.log("quit meter state");
+  //       console.log('speed is:', this.speed);
+  //       return;
+  //     }
+  //     const timeDelta = Date.now() - this.timeNow;
+  //     if (timeDelta < 20) {
+  //       window.requestAnimationFrame(() => {
+  //         runIt();
+  //       });
+  //       return;
+  //     }
+  //     this.speed += (VELOCITY * timeDelta);
+  //     console.log('this.speed:', this.speed);
 
-      if (this.speed > this.speedMax) {
-        this.speed = this.speedMax;
-        VELOCITY = (-VELOCITY);
-        console.log('over: velocity ->', VELOCITY);
-      } else if (this.speed < 0) {
-        this.speed = 0;
-        VELOCITY = (-VELOCITY);
-        console.log('under: velocity ->', VELOCITY);
-      }
-      this.draw(ctx);
-      this.timeNow = Date.now();
+  //     if (this.speed > this.speedMax) {
+  //       this.speed = this.speedMax;
+  //       VELOCITY = (-VELOCITY);
+  //       console.log('over: velocity ->', VELOCITY);
+  //     } else if (this.speed < 0) {
+  //       this.speed = 0;
+  //       VELOCITY = (-VELOCITY);
+  //       console.log('under: velocity ->', VELOCITY);
+  //     }
+  //     this.draw(ctx);
+  //     this.timeNow = Date.now();
 
-      window.requestAnimationFrame(() => {
-        runIt();
-      });
-    };
+  //     window.requestAnimationFrame(() => {
+  //       runIt();
+  //     });
+  //   };
 
-    if (this.bOccupied === false) {
-      this.bOccupied = true;
-      runIt();
-    }
-  }
+  //   if (this.bOccupied === false) {
+  //     this.bOccupied = true;
+  //     runIt();
+  //   }
+  // }
   public stop(callback: () => void) {
     console.log(this.name, '-> stop()');
     this.bOccupied = false;
@@ -381,7 +386,7 @@ class Playground {
       console.log(event.code, event.type);
       // console.log();
       if (this.state !== STATE.METERING) {
-        console.log('Can not respond to keydown event');
+        // console.log('Can not respond to keydown event');
         return;
       }
       if (this.meter.bOccupied === false) {
@@ -396,14 +401,14 @@ class Playground {
       console.log(event.code, event.type);
 
       if (this.state !== STATE.METERING) {
-        console.log('Can not respond to keydown event');
+        // console.log('Can not respond to keydown event');
         return;
       }
       // console.log();
       this.meter.stop(() => {
         this.state = STATE.RUNNING;
         console.log('Switch to running state');
-        this.runRunning();
+        // this.runRunning();
       });
     });
   }
