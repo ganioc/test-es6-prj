@@ -8,37 +8,39 @@ const context = canvas.getContext('2d');
 console.log('WIDTH:', WIDTH);
 console.log('HEIGHT:', HEIGHT);
 
-function Erun(callbackCheck: (number) => boolean, callbackRun: (number) => void) {
-  let timeDelta: number = 123;
-  let timeNow = Date.now();
+class Env {
 
-  const runIt = () => {
-    timeDelta = Date.now() - timeNow;
+  public static run(callbackCheck: (number) => boolean, callbackRun: (number) => void) {
+    let timeDelta: number = 123;
+    let timeNow = Date.now();
 
-    const status: boolean = callbackCheck(timeDelta);
-    console.log('status:', status);
-    if (status === false) {
-      return;
-    }
+    const runIt = () => {
+      timeDelta = Date.now() - timeNow;
 
-    if (timeDelta < 20) {
+      const status: boolean = callbackCheck(timeDelta);
+      console.log('status:', status);
+      if (status === false) {
+        return;
+      }
+
+      if (timeDelta < 20) {
+        rerunIt();
+        return;
+      }
+      callbackRun(timeDelta);
+
+      timeNow = Date.now();
+
       rerunIt();
-      return;
-    }
-    callbackRun(timeDelta);
-
-    timeNow = Date.now();
-
-    rerunIt();
-  };
-  const rerunIt = () => {
-    window.requestAnimationFrame(() => {
-      runIt();
-    });
-  };
-  runIt();
+    };
+    const rerunIt = () => {
+      window.requestAnimationFrame(() => {
+        runIt();
+      });
+    };
+    runIt();
+  }
 }
-
 interface IfBasicInfo {
   x: number;
   y: number;
@@ -98,7 +100,6 @@ class Meter extends Character implements IfBehavior {
   private atomX: number;
   private timeNow: number;
   private color2: string;
-  //private VELOCITY: number;
 
   constructor(option: IfBasicInfo, basicLen: number) {
     super(option);
@@ -134,7 +135,7 @@ class Meter extends Character implements IfBehavior {
       this.bOccupied = true;
       console.log("meter run() only once");
 
-      Erun(
+      Env.run(
         (timeDelta) => {
           console.log('callbackCheck: ', timeDelta);
           if (this.bOccupied === false) {
@@ -183,13 +184,6 @@ class Table extends Character implements IfBehavior {
   public draw(ctx: CanvasRenderingContext2D) {
     console.log(this.name, '->Table draw');
     ctx.fillStyle = this.color;
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2,
-      this.width,
-      this.height,
-    );
-    ctx.fillStyle = this.color2;
     ctx.fillRect(
       this.x - this.width / 2,
       this.y - this.height / 2,
@@ -377,7 +371,6 @@ class Playground {
   public clearRect() {
     this.ctx.fillStyle = this.colorBackground;
     // this.ctx.clearRect(0, 0, this.width, this.height);
-
     this.ctx.fillRect(0, 0, this.width, this.height);
   }
   public drawLogo() {
@@ -423,52 +416,82 @@ class Playground {
     this.player.speedX = (this.player.x - aimX) / DUR;
     this.player.speedY = this.player.gravityY;
 
-    this.timeNow = Date.now();
+    // this.timeNow = Date.now();
 
     const radiSpeed = 25;
     let angle = 0;
 
-    const runIt = () => {
-      let timeDelta = Date.now() - this.timeNow;
+    Env.run(
+      (timeDelta) => {
+        const displacement = this.player.y - aimY;
+        if (displacement < 0.1) {
+          callback();
+          return false;
+        } else {
+          return true;
+        }
+      },
+      (timeD) => {
+        const timeDelta = timeD / 1000;
+        this.player.x -= this.player.speedX * timeDelta;
+        this.player.y -= this.player.speedY * timeDelta;
+        this.player.speedY += this.player.gravityY * timeDelta;
 
-      if (timeDelta < 10) {
-        window.requestAnimationFrame(() => {
-          runIt();
-        });
-        return;
-      }
-      const displacement = this.player.y - aimY;
+        this.clearRect();
+        this.playerTable.draw(this.ctx);
+        this.table.draw(this.ctx);
+        this.drawLogo();
 
-      timeDelta = timeDelta / 1000;
+        this.ctx.save();
+        this.ctx.translate(this.player.x, this.player.y);
+        angle += radiSpeed * timeDelta;
+        this.ctx.rotate(angle);
+        this.player.drawRelative(this.ctx);
+        this.ctx.restore();
+      },
+    );
 
-      if (displacement < 0.1) {
-        callback();
-        return;
-      }
+    // const runIt = () => {
+    //   let timeDelta = Date.now() - this.timeNow;
 
-      this.player.x -= this.player.speedX * timeDelta;
-      this.player.y -= this.player.speedY * timeDelta;
-      this.player.speedY += this.player.gravityY * timeDelta;
+    //   if (timeDelta < 10) {
+    //     window.requestAnimationFrame(() => {
+    //       runIt();
+    //     });
+    //     return;
+    //   }
+    //   const displacement = this.player.y - aimY;
 
-      this.clearRect();
-      this.playerTable.draw(this.ctx);
-      this.table.draw(this.ctx);
-      this.drawLogo();
+    //   timeDelta = timeDelta / 1000;
 
-      this.ctx.save();
-      this.ctx.translate(this.player.x, this.player.y);
-      angle += radiSpeed * timeDelta;
-      this.ctx.rotate(angle);
-      this.player.drawRelative(this.ctx);
-      this.ctx.restore();
+    //   if (displacement < 0.1) {
+    //     callback();
+    //     return;
+    //   }
 
-      this.timeNow = Date.now();
-      window.requestAnimationFrame(() => {
-        runIt();
-      });
+    //   this.player.x -= this.player.speedX * timeDelta;
+    //   this.player.y -= this.player.speedY * timeDelta;
+    //   this.player.speedY += this.player.gravityY * timeDelta;
 
-    };
-    runIt();
+    //   this.clearRect();
+    //   this.playerTable.draw(this.ctx);
+    //   this.table.draw(this.ctx);
+    //   this.drawLogo();
+
+    //   this.ctx.save();
+    //   this.ctx.translate(this.player.x, this.player.y);
+    //   angle += radiSpeed * timeDelta;
+    //   this.ctx.rotate(angle);
+    //   this.player.drawRelative(this.ctx);
+    //   this.ctx.restore();
+
+    //   this.timeNow = Date.now();
+    //   window.requestAnimationFrame(() => {
+    //     runIt();
+    //   });
+
+    // };
+    // runIt();
   }
   public moveToDefault(playerX: number, playerTableX: number, tableX: number, dur: number, callback) {
 
