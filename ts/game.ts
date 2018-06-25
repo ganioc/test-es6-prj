@@ -98,7 +98,7 @@ class Meter extends Character implements IfBehavior {
   private atomX: number;
   private timeNow: number;
   private color2: string;
-  private VELOCITY: number;
+  //private VELOCITY: number;
 
   constructor(option: IfBasicInfo, basicLen: number) {
     super(option);
@@ -128,11 +128,10 @@ class Meter extends Character implements IfBehavior {
 
   public run(ctx: CanvasRenderingContext2D) {
     this.speed = 0;
-    this.VELOCITY = 10 / 1000;
+    let VELOCITY = 10 / 1000;
 
     if (this.bOccupied === false) {
       this.bOccupied = true;
-
       console.log("meter run() only once");
 
       Erun(
@@ -146,68 +145,24 @@ class Meter extends Character implements IfBehavior {
         },
         (timeDelta) => {
           console.log('callbackrun: ', timeDelta);
-          this.speed += (this.VELOCITY * timeDelta);
+          this.speed += (VELOCITY * timeDelta);
           console.log('this.speed:', this.speed);
 
           if (this.speed > this.speedMax) {
             this.speed = this.speedMax;
-            this.VELOCITY = (-this.VELOCITY);
-            console.log('over: velocity ->', this.VELOCITY);
+            VELOCITY = (-VELOCITY);
+            console.log('over: velocity ->', VELOCITY);
           } else if (this.speed < 0) {
             this.speed = 0;
-            this.VELOCITY = (-this.VELOCITY);
-            console.log('under: velocity ->', this.VELOCITY);
+            VELOCITY = (-VELOCITY);
+            console.log('under: velocity ->', VELOCITY);
           }
           this.draw(ctx);
         },
       );
     }
   }
-  // public run1(ctx: CanvasRenderingContext2D) {
-  //   console.log(this.name, '-> run()');
-  //   this.timeNow = Date.now();
-  //   this.speed = 0;
-  //   let VELOCITY = 10 / 1000;
 
-  //   const runIt = () => {
-  //     if (this.bOccupied === false) {
-  //       this.clearRect(ctx);
-  //       console.log("quit meter state");
-  //       console.log('speed is:', this.speed);
-  //       return;
-  //     }
-  //     const timeDelta = Date.now() - this.timeNow;
-  //     if (timeDelta < 20) {
-  //       window.requestAnimationFrame(() => {
-  //         runIt();
-  //       });
-  //       return;
-  //     }
-  //     this.speed += (VELOCITY * timeDelta);
-  //     console.log('this.speed:', this.speed);
-
-  //     if (this.speed > this.speedMax) {
-  //       this.speed = this.speedMax;
-  //       VELOCITY = (-VELOCITY);
-  //       console.log('over: velocity ->', VELOCITY);
-  //     } else if (this.speed < 0) {
-  //       this.speed = 0;
-  //       VELOCITY = (-VELOCITY);
-  //       console.log('under: velocity ->', VELOCITY);
-  //     }
-  //     this.draw(ctx);
-  //     this.timeNow = Date.now();
-
-  //     window.requestAnimationFrame(() => {
-  //       runIt();
-  //     });
-  //   };
-
-  //   if (this.bOccupied === false) {
-  //     this.bOccupied = true;
-  //     runIt();
-  //   }
-  // }
   public stop(callback: () => void) {
     console.log(this.name, '-> stop()');
     this.bOccupied = false;
