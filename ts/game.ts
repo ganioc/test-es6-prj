@@ -12,9 +12,6 @@ function Erun(callbackCheck: (number) => boolean, callbackRun: (number) => void)
   let timeDelta: number = 123;
   let timeNow = Date.now();
 
-  // const feedback = callbackRun(timeDelta);
-  // console.log("Erun -> ", feedback);
-
   const runIt = () => {
     timeDelta = Date.now() - timeNow;
 
@@ -26,9 +23,6 @@ function Erun(callbackCheck: (number) => boolean, callbackRun: (number) => void)
 
     if (timeDelta < 20) {
       rerunIt();
-      // window.requestAnimationFrame(() => {
-      //   runIt();
-      // });
       return;
     }
     callbackRun(timeDelta);
@@ -152,6 +146,19 @@ class Meter extends Character implements IfBehavior {
         },
         (timeDelta) => {
           console.log('callbackrun: ', timeDelta);
+          this.speed += (this.VELOCITY * timeDelta);
+          console.log('this.speed:', this.speed);
+
+          if (this.speed > this.speedMax) {
+            this.speed = this.speedMax;
+            this.VELOCITY = (-this.VELOCITY);
+            console.log('over: velocity ->', this.VELOCITY);
+          } else if (this.speed < 0) {
+            this.speed = 0;
+            this.VELOCITY = (-this.VELOCITY);
+            console.log('under: velocity ->', this.VELOCITY);
+          }
+          this.draw(ctx);
         },
       );
     }
@@ -408,7 +415,7 @@ class Playground {
       this.meter.stop(() => {
         this.state = STATE.RUNNING;
         console.log('Switch to running state');
-        // this.runRunning();
+        this.runRunning();
       });
     });
   }
