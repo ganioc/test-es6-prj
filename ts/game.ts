@@ -7,8 +7,6 @@ const context = canvas.getContext('2d');
 const TEXT_CAPTION = 'Zelda Jump';
 const img = new Image();
 img.src = '../html/zelda1.png';
-const imgBg = new Image();
-imgBg.src = '../html/background.png';
 
 console.log('WIDTH:', WIDTH);
 console.log('HEIGHT:', HEIGHT);
