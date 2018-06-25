@@ -1,6 +1,4 @@
 
-console.log('start');
-
 const CANVAS_ID = 'mycanvas';
 const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement;
 const WIDTH = document.getElementById(CANVAS_ID).getAttribute('width');
@@ -44,12 +42,6 @@ class Character {
     this.name = option.name;
   }
 
-  // get x_position() {
-  //   return this.x;
-  // }
-  // set x_position(yIn: number) {
-  //   this.y = yIn;
-  // }
   public getColor(): string {
     const lstColor: string[] = [
       'ee0000',
@@ -74,6 +66,7 @@ class Meter extends Character implements IfBehavior {
   public bOccupied: boolean;
   private atomX: number;
   private timeNow: number;
+  private color2: string;
 
   constructor(option: IfBasicInfo, basicLen: number) {
     super(option);
@@ -83,6 +76,7 @@ class Meter extends Character implements IfBehavior {
     this.bOccupied = false;
 
     this.atomX = basicLen;
+    this.color2 = '#ff8000';
   }
   public clearRect(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = '#000000';
@@ -96,12 +90,8 @@ class Meter extends Character implements IfBehavior {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x - this.width / 2, this.y - this.speed * this.atomX, this.width, this.speed * this.atomX);
 
-    ctx.strokeStyle = this.color;
-    ctx.beginPath();
-    ctx.moveTo(this.x - this.width / 2, this.y - this.height);
-    ctx.lineTo(this.x + this.width / 2, this.y - this.height);
-    ctx.closePath();
-    ctx.stroke();
+    ctx.fillStyle = this.color2;
+    ctx.fillRect(this.x - this.width / 2, this.y - 10 * this.atomX, this.width, (10 - this.speed) * this.atomX);
   }
 
   public run(ctx: CanvasRenderingContext2D) {
@@ -161,6 +151,7 @@ class Table extends Character implements IfBehavior {
 
   constructor(option: IfBasicInfo) {
     super(option);
+
   }
   public run(ctx: CanvasRenderingContext2D) {
     console.log('Table run()');
@@ -168,6 +159,13 @@ class Table extends Character implements IfBehavior {
   public draw(ctx: CanvasRenderingContext2D) {
     console.log(this.name, '->Table draw');
     ctx.fillStyle = this.color;
+    ctx.fillRect(
+      this.x - this.width / 2,
+      this.y - this.height / 2,
+      this.width,
+      this.height,
+    );
+    ctx.fillStyle = this.color2;
     ctx.fillRect(
       this.x - this.width / 2,
       this.y - this.height / 2,
@@ -314,7 +312,7 @@ class Playground {
       y: this.atomX * 11,
       width: this.atomX,
       height: this.atomX * 10,
-      color: '#ffffff',
+      color: '#ff0000',
       name: 'meter',
     }, this.atomX);
 
