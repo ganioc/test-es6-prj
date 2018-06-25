@@ -4,6 +4,11 @@ const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement;
 const WIDTH = document.getElementById(CANVAS_ID).getAttribute('width');
 const HEIGHT = document.getElementById(CANVAS_ID).getAttribute('height');
 const context = canvas.getContext('2d');
+const TEXT_CAPTION = 'Zelda Jump';
+const img = new Image();
+img.src = '../html/zelda1.png';
+const imgBg = new Image();
+imgBg.src = '../html/background.png';
 
 console.log('WIDTH:', WIDTH);
 console.log('HEIGHT:', HEIGHT);
@@ -87,6 +92,10 @@ class Character {
       'ff00ff',
       '00bfff',
       '64fe2e',
+      'ffee11',
+      '00eeee',
+      'ff0345',
+      '325643',
     ];
     return lstColor[Math.floor(lstColor.length * Math.random())];
   }
@@ -220,8 +229,14 @@ class Player extends Character implements IfBehavior {
   }
   public draw(ctx: CanvasRenderingContext2D) {
     console.log(this.name, '-> Player draw()');
-    ctx.fillStyle = this.color;
-    ctx.fillRect(
+    // ctx.fillStyle = this.color;
+    // ctx.fillRect(
+    //   this.x - this.width / 2,
+    //   this.y - this.height / 2,
+    //   this.width,
+    //   this.height,
+    // );
+    ctx.drawImage(img,
       this.x - this.width / 2,
       this.y - this.height / 2,
       this.width,
@@ -231,7 +246,13 @@ class Player extends Character implements IfBehavior {
   public drawRelative(ctx: CanvasRenderingContext2D) {
     console.log(this.name, '-> Player draw()');
     ctx.fillStyle = this.color;
-    ctx.fillRect(
+    // ctx.fillRect(
+    //   - this.width / 2,
+    //   - this.height / 2,
+    //   this.width,
+    //   this.height,
+    // );
+    ctx.drawImage(img,
       - this.width / 2,
       - this.height / 2,
       this.width,
@@ -288,8 +309,8 @@ class Playground {
     this.atomX = this.width / 20;
     this.groundLevelY = this.height - this.atomX / 2;
     this.borderX = this.width - 4 * this.atomX;
-    this.playerWidth = this.atomX;
-    this.playerHeight = this.atomX * 2;
+    this.playerWidth = this.atomX * 1.5;
+    this.playerHeight = this.atomX * 3;
     this.playerDefaultX = this.borderX + (this.width - this.borderX) / 2;
 
     this.tableDefaultCenterX = this.borderX / 2;
@@ -377,13 +398,25 @@ class Playground {
     this.ctx.font = '22px Georgia';
     this.ctx.fillStyle = '#ffffff';
     this.ctx.fillText('Score: ' + this.score, 10, 50);
-    this.ctx.fillText('History: ' + this.historyScore, 10, 80);
+    this.ctx.fillText('Hi Score: ' + this.historyScore, 10, 80);
 
     this.ctx.font = '32px Georgia';
-    this.ctx.fillText('Jump', 260, 50);
+    this.ctx.fillText(TEXT_CAPTION, 260, 50);
+  }
+  public drawBackground() {
+    const w = 100;
+    const h = 50;
+    this.ctx.drawImage(
+      imgBg,
+      this.width / 2 - w,
+      this.height / 2 - h,
+      w,
+      h,
+    );
   }
   public reDraw() {
     this.clearRect();
+    // this.drawBackground();
     this.playerTable.draw(this.ctx);
     this.player.draw(this.ctx);
     this.table.draw(this.ctx);
