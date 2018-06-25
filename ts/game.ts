@@ -8,6 +8,31 @@ const context = canvas.getContext('2d');
 console.log('WIDTH:', WIDTH);
 console.log('HEIGHT:', HEIGHT);
 
+function Erun(callbackRun: (number) => boolean) {
+  let timeDelta: number;
+  let timeNow = Date.now();
+
+  const runIt = () => {
+    timeDelta = Date.now() - timeNow;
+    if (timeDelta < 20) {
+      rerunIt();
+    }
+    const status: boolean = callbackRun(timeDelta);
+
+    if (status === false) {
+      return;
+    }
+    timeNow = Date.now();
+    rerunIt();
+  };
+  const rerunIt = () => {
+    window.requestAnimationFrame(() => {
+      runIt();
+    });
+  };
+  runIt();
+}
+
 interface IfBasicInfo {
   x: number;
   y: number;
@@ -67,6 +92,7 @@ class Meter extends Character implements IfBehavior {
   private atomX: number;
   private timeNow: number;
   private color2: string;
+  private VELOCITY: number;
 
   constructor(option: IfBasicInfo, basicLen: number) {
     super(option);
@@ -93,7 +119,38 @@ class Meter extends Character implements IfBehavior {
     ctx.fillStyle = this.color2;
     ctx.fillRect(this.x - this.width / 2, this.y - 10 * this.atomX, this.width, (10 - this.speed) * this.atomX);
   }
+  public workFunc(ctx: CanvasRenderingContext2D) {
+    return function (timeDelta) {
+      if (this.bOccupied === false) {
+        this.clearRect(ctx);
+        console.log("quit meter state");
+        console.log('speed is:', this.speed);
+        return false;
+      }
+      this.speed += (this.VELOCITY * timeDelta);
+      if (this.speed > this.speedMax) {
+        this.speed = this.speedMax;
+        this.VELOCITY = (-this.VELOCITY);
+        console.log('over: velocity ->', this.VELOCITY);
+      } else if (this.speed < 0) {
+        this.speed = 0;
+        this.VELOCITY = (-this.VELOCITY);
+        console.log('under: velocity ->', this.VELOCITY);
+      }
+      this.draw(ctx);
+      return true;
+    };
+  }
+  public run1(ctx: CanvasRenderingContext2D) {
+    this.speed = 0;
+    this.VELOCITY = 10 / 1000;
 
+    if (this.bOccupied === false) {
+      this.bOccupied = true;
+
+      Erun(this.workFunc(ctx));
+    }
+  }
   public run(ctx: CanvasRenderingContext2D) {
     console.log(this.name, '-> run()');
     this.timeNow = Date.now();

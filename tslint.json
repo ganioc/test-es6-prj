@@ -12,7 +12,8 @@
         "prefer-for-of": false,
         "ordered-imports": false,
         "quotemark": false,
-        "max-classes-per-file": false 
+        "max-classes-per-file": false,
+        "space-before-function-paren": false
     },
     "rulesDirectory": [
         "ts/"
