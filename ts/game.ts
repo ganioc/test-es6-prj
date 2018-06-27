@@ -401,17 +401,17 @@ class Playground {
     this.ctx.font = '32px Georgia';
     this.ctx.fillText(TEXT_CAPTION, 260, 50);
   }
-  public drawBackground() {
-    const w = 100;
-    const h = 50;
-    this.ctx.drawImage(
-      imgBg,
-      this.width / 2 - w,
-      this.height / 2 - h,
-      w,
-      h,
-    );
-  }
+  // public drawBackground() {
+  //   const w = 100;
+  //   const h = 50;
+  //   this.ctx.drawImage(
+  //     imgBg,
+  //     this.width / 2 - w,
+  //     this.height / 2 - h,
+  //     w,
+  //     h,
+  //   );
+  // }
   public reDraw() {
     this.clearRect();
     // this.drawBackground();
