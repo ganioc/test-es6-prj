@@ -4,7 +4,7 @@
         "noImplicitAny": false,
         "module": "commonjs",
         "removeComments": true,
-        "sourceMap": false,
+        "sourceMap": true,
         "rootDir": "ts",
         "outDir": "src"
     },
